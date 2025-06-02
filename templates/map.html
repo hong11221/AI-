@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>추천 경로 지도</title>
-  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&autoload=false&libraries=services"></script>
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&libraries=services"></script>
   <script>
-    kakao.maps.load(() => {
+    window.onload = () => {
       const mapContainer = document.getElementById('map');
       const mapOption = {
         center: new kakao.maps.LatLng(37.5665, 126.9780),
@@ -64,7 +64,7 @@
 
         processPoint(0);
       });
-    });
+    };
   </script>
   <style>
     #map {
@@ -77,4 +77,4 @@
   <h2 style="margin:10px;">{{ place }} 주변 추천 경로</h2>
   <div id="map"></div>
 </body>
-</html>         
+</html>
