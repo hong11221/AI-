@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>추천 경로 지도</title>
-  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&libraries=services"></script>
+
+  <!-- ✅ 카카오맵 JS SDK: autoload는 기본값 true라 생략해도 무방 -->
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&libraries=services"></script>
+</head>
+<body>
+  <h2>{{ place }} 주변 추천 경로</h2>
+  <div id="map" style="width: 100%; height: 600px;"></div>
+
+  <!-- ✅ 지도 스크립트는 SDK 로드 이후 실행되어야 하므로 아래에 위치 -->
   <script>
     window.onload = () => {
       const mapContainer = document.getElementById('map');
@@ -15,20 +23,19 @@
       const geocoder = new kakao.maps.services.Geocoder();
 
       const routes = {{ routes | tojson }};
-      console.log("🧭 전달받은 routes:", routes);
+      const colorList = ['#007aff', '#ff3b30', '#34c759', '#ff9500'];
 
-      routes.forEach((route, routeIndex) => {
+      routes.forEach((route, idx) => {
         const coords = [];
-        const colorList = ['#007aff', '#ff3b30', '#34c759', '#ff9500', '#8e8e93'];
-        const strokeColor = colorList[routeIndex % colorList.length];
+        const strokeColor = colorList[idx % colorList.length];
 
-        const processPoint = (index) => {
-          if (index >= route.length) {
+        const process = (i) => {
+          if (i >= route.length) {
             if (coords.length >= 2) {
               const polyline = new kakao.maps.Polyline({
                 path: coords,
                 strokeWeight: 4,
-                strokeColor: strokeColor,
+                strokeColor,
                 strokeOpacity: 0.8,
                 strokeStyle: 'solid'
               });
@@ -37,44 +44,27 @@
             return;
           }
 
-          geocoder.addressSearch(route[index], (result, status) => {
+          geocoder.addressSearch(route[i], (result, status) => {
             if (status === kakao.maps.services.Status.OK) {
-              console.log("✅ 변환 성공:", route[index], result[0]);
-
               const latlng = new kakao.maps.LatLng(result[0].y, result[0].x);
               coords.push(latlng);
 
-              new kakao.maps.Marker({ map: map, position: latlng });
+              new kakao.maps.Marker({ map, position: latlng });
 
               new kakao.maps.CustomOverlay({
-                map: map,
+                map,
                 position: latlng,
-                content: `<div style="background:#fff;border:2px solid ${strokeColor};border-radius:50%;padding:4px;font-size:12px;text-align:center;width:20px;height:20px;line-height:12px;">${index + 1}</div>`,
+                content: `<div style="background:#fff;border:2px solid ${strokeColor};border-radius:50%;padding:4px;font-size:12px;text-align:center;width:20px;height:20px;line-height:12px;">${i + 1}</div>`,
                 yAnchor: 1
               });
-            } else {
-              console.warn("❌ 변환 실패:", route[index]);
             }
-
-            setTimeout(() => {
-              processPoint(index + 1);
-            }, 100);
+            setTimeout(() => process(i + 1), 100);
           });
         };
 
-        processPoint(0);
+        process(0);
       });
     };
   </script>
-  <style>
-    #map {
-      width: 100%;
-      height: 600px;
-    }
-  </style>
-</head>
-<body>
-  <h2 style="margin:10px;">{{ place }} 주변 추천 경로</h2>
-  <div id="map"></div>
 </body>
 </html>
