@@ -4,16 +4,25 @@
   <meta charset="UTF-8">
   <title>추천 경로 지도</title>
 
-  <!-- ✅ 카카오맵 JS SDK: autoload는 기본값 true라 생략해도 무방 -->
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&libraries=services"></script>
-</head>
-<body>
-  <h2>{{ place }} 주변 추천 경로</h2>
-  <div id="map" style="width: 100%; height: 600px;"></div>
+  <!-- ✅ Kakao 지도 SDK autoload=true 로 설정 -->
+  <script type="text/javascript" 
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&autoload=true&libraries=services">
+  </script>
 
-  <!-- ✅ 지도 스크립트는 SDK 로드 이후 실행되어야 하므로 아래에 위치 -->
+  <style>
+    #map {
+      width: 100%;
+      height: 600px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2 style="margin:10px;">{{ place }} 주변 추천 경로</h2>
+  <div id="map"></div>
+
   <script>
-    window.onload = () => {
+    window.onload = function () {
       const mapContainer = document.getElementById('map');
       const mapOption = {
         center: new kakao.maps.LatLng(37.5665, 126.9780),
@@ -23,19 +32,23 @@
       const geocoder = new kakao.maps.services.Geocoder();
 
       const routes = {{ routes | tojson }};
-      const colorList = ['#007aff', '#ff3b30', '#34c759', '#ff9500'];
+      console.log("🧭 전달받은 routes:", routes);
 
-      routes.forEach((route, idx) => {
+      const colorList = ['#007aff', '#ff3b30', '#34c759', '#ff9500', '#8e8e93'];
+
+      routes.forEach((routeObj, routeIndex) => {
+        const route = routeObj.route;
+        const user = routeObj.user;
         const coords = [];
-        const strokeColor = colorList[idx % colorList.length];
+        const strokeColor = colorList[routeIndex % colorList.length];
 
-        const process = (i) => {
-          if (i >= route.length) {
+        const processPoint = (index) => {
+          if (index >= route.length) {
             if (coords.length >= 2) {
               const polyline = new kakao.maps.Polyline({
                 path: coords,
                 strokeWeight: 4,
-                strokeColor,
+                strokeColor: strokeColor,
                 strokeOpacity: 0.8,
                 strokeStyle: 'solid'
               });
@@ -44,25 +57,30 @@
             return;
           }
 
-          geocoder.addressSearch(route[i], (result, status) => {
+          geocoder.addressSearch(route[index], (result, status) => {
             if (status === kakao.maps.services.Status.OK) {
               const latlng = new kakao.maps.LatLng(result[0].y, result[0].x);
               coords.push(latlng);
 
-              new kakao.maps.Marker({ map, position: latlng });
+              new kakao.maps.Marker({ map: map, position: latlng });
 
               new kakao.maps.CustomOverlay({
-                map,
+                map: map,
                 position: latlng,
-                content: `<div style="background:#fff;border:2px solid ${strokeColor};border-radius:50%;padding:4px;font-size:12px;text-align:center;width:20px;height:20px;line-height:12px;">${i + 1}</div>`,
+                content: `<div style="background:#fff;border:2px solid ${strokeColor};border-radius:50%;padding:4px;font-size:12px;text-align:center;width:20px;height:20px;line-height:12px;">${index + 1}</div>`,
                 yAnchor: 1
               });
+            } else {
+              console.warn("❌ 변환 실패:", route[index]);
             }
-            setTimeout(() => process(i + 1), 100);
+
+            setTimeout(() => {
+              processPoint(index + 1);
+            }, 100);
           });
         };
 
-        process(0);
+        processPoint(0);
       });
     };
   </script>
