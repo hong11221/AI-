@@ -3,22 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>추천 경로 지도</title>
-
-  <!-- ✅ SDK는 autoload 기본값 true 이므로 생략 -->
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&libraries=services"></script>
+  <!-- ✅ HTTPS로 된 올바른 Kakao Maps SDK -->
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5213faf6f38ce579f8ebad9bb28a1725&autoload=false&libraries=services"></script>
 </head>
 <body>
   <h2>{{ place }} 주변 추천 경로</h2>
   <div id="map" style="width: 100%; height: 600px;"></div>
 
-  <!-- ✅ window.onload이 아닌 DOMContentLoaded 사용 (더 빠르고 안정적) -->
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      if (!window.kakao || !window.kakao.maps) {
-        console.error("❌ Kakao SDK가 로드되지 않았습니다.");
-        return;
-      }
-
+    kakao.maps.load(() => {
       const mapContainer = document.getElementById('map');
       const mapOption = {
         center: new kakao.maps.LatLng(37.5665, 126.9780),
